@@ -73,6 +73,47 @@
           <groups>${test.groups}</groups>
         </configuration>
       </plugin>
+
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>0.8.7</version>
+        <executions>
+          <execution>
+            <id>default-prepare-agent</id>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>default-report</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>default-check</id>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <rule>
+                  <element>BUNDLE</element>
+                  <limits>
+                    <limit>
+                      <counter>COMPLEXITY</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>0.03</minimum>
+                    </limit>
+                  </limits>
+                </rule>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 
@@ -99,5 +140,14 @@
     </profile>
 
   </profiles>
-
+<distributionManagement>
+    <snapshotRepository>
+      <id>maven-dev</id>
+      <url>https://pkg.harness.io/pkg/SAn9tg9eRrWyEJyLZ01ibw/ecommerce-demo-app/maven</url>
+    </snapshotRepository>
+    <repository>
+      <id>maven-dev</id>
+      <url>https://pkg.harness.io/pkg/SAn9tg9eRrWyEJyLZ01ibw/ecommerce-demo-app/maven</url>
+    </repository>
+  </distributionManagement>
 </project>

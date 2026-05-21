@@ -1,166 +1,193 @@
 pipeline:
-  name: Ecommerce App - Parallel Test Pipeline
-  identifier: ecommerce_parallel_tests
-  description: >
-    Demonstrates Harness Parallel Steps by running 5 independent test suites
-    (product, cart, order, user, integration) simultaneously.
-    Each step targets a JUnit 5 @Tag group via Maven profiles.
-  projectIdentifier: <YOUR_PROJECT_ID>
-  orgIdentifier: <YOUR_ORG_ID>
-  tags:
-    demo: parallel-steps
-    app: ecommerce
-
-  stages:
-    - stage:
-        name: Build
-        identifier: build_stage
-        type: CI
-        spec:
-          cloneCodebase: true
-          infrastructure:
-            type: KubernetesDirect
-            spec:
-              connectorRef: <YOUR_K8S_CONNECTOR>
-              namespace: harness-builds
-
-          execution:
-            steps:
-
-              # ── Compile ────────────────────────────────────────────────────
-              - step:
-                  name: Compile
-                  identifier: compile
-                  type: Run
-                  spec:
-                    connectorRef: <YOUR_DOCKER_CONNECTOR>
-                    image: maven:3.9-eclipse-temurin-17
-                    command: mvn compile -B -q
-                    envVariables:
-                      MAVEN_OPTS: "-Xmx512m"
-
-              # ── Parallel Test Suites ───────────────────────────────────────
-              # All 5 suites run simultaneously after compile.
-              # Without parallel steps this would run sequentially (~5× slower).
-              - parallel:
-                  - step:
-                      name: "Tests: Product"
-                      identifier: test_product
-                      type: Run
-                      spec:
-                        connectorRef: <YOUR_DOCKER_CONNECTOR>
-                        image: maven:3.9-eclipse-temurin-17
-                        command: |
-                          echo "▶ Running Product test suite..."
-                          mvn test -P product-tests -B \
-                            -Dsurefire.reportsDirectory=target/surefire-reports/product
-                          echo "✅ Product tests complete"
-                        envVariables:
-                          MAVEN_OPTS: "-Xmx512m"
-                        reports:
-                          type: JUnit
-                          spec:
-                            paths:
-                              - "target/surefire-reports/product/*.xml"
-
-                  - step:
-                      name: "Tests: Cart"
-                      identifier: test_cart
-                      type: Run
-                      spec:
-                        connectorRef: <YOUR_DOCKER_CONNECTOR>
-                        image: maven:3.9-eclipse-temurin-17
-                        command: |
-                          echo "▶ Running Cart test suite..."
-                          mvn test -P cart-tests -B \
-                            -Dsurefire.reportsDirectory=target/surefire-reports/cart
-                          echo "✅ Cart tests complete"
-                        envVariables:
-                          MAVEN_OPTS: "-Xmx512m"
-                        reports:
-                          type: JUnit
-                          spec:
-                            paths:
-                              - "target/surefire-reports/cart/*.xml"
-
-                  - step:
-                      name: "Tests: Order"
-                      identifier: test_order
-                      type: Run
-                      spec:
-                        connectorRef: <YOUR_DOCKER_CONNECTOR>
-                        image: maven:3.9-eclipse-temurin-17
-                        command: |
-                          echo "▶ Running Order test suite..."
-                          mvn test -P order-tests -B \
-                            -Dsurefire.reportsDirectory=target/surefire-reports/order
-                          echo "✅ Order tests complete"
-                        envVariables:
-                          MAVEN_OPTS: "-Xmx512m"
-                        reports:
-                          type: JUnit
-                          spec:
-                            paths:
-                              - "target/surefire-reports/order/*.xml"
-
-                  - step:
-                      name: "Tests: User"
-                      identifier: test_user
-                      type: Run
-                      spec:
-                        connectorRef: <YOUR_DOCKER_CONNECTOR>
-                        image: maven:3.9-eclipse-temurin-17
-                        command: |
-                          echo "▶ Running User test suite..."
-                          mvn test -P user-tests -B \
-                            -Dsurefire.reportsDirectory=target/surefire-reports/user
-                          echo "✅ User tests complete"
-                        envVariables:
-                          MAVEN_OPTS: "-Xmx512m"
-                        reports:
-                          type: JUnit
-                          spec:
-                            paths:
-                              - "target/surefire-reports/user/*.xml"
-
-                  - step:
-                      name: "Tests: Integration"
-                      identifier: test_integration
-                      type: Run
-                      spec:
-                        connectorRef: <YOUR_DOCKER_CONNECTOR>
-                        image: maven:3.9-eclipse-temurin-17
-                        command: |
-                          echo "▶ Running Integration test suite..."
-                          mvn test -P integration-tests -B \
-                            -Dsurefire.reportsDirectory=target/surefire-reports/integration
-                          echo "✅ Integration tests complete"
-                        envVariables:
-                          MAVEN_OPTS: "-Xmx512m"
-                        reports:
-                          type: JUnit
-                          spec:
-                            paths:
-                              - "target/surefire-reports/integration/*.xml"
-
-              # ── Package (runs after all parallel tests pass) ───────────────
-              - step:
-                  name: Package
-                  identifier: package
-                  type: Run
-                  spec:
-                    connectorRef: <YOUR_DOCKER_CONNECTOR>
-                    image: maven:3.9-eclipse-temurin-17
-                    command: mvn package -DskipTests -B -q
-                    envVariables:
-                      MAVEN_OPTS: "-Xmx512m"
-
+  name: ci-tidbits-parallel-steps
+  identifier: citidbitsparallelsteps
+  projectIdentifier: nidapractice
+  orgIdentifier: Harness_Training
+  tags: {}
   properties:
     ci:
       codebase:
-        connectorRef: <YOUR_GIT_CONNECTOR>
         repoName: ci-tidbits-parallel-steps
-        build:
-          type: branch
-          spec:
-            branch: main
+        build: <+input>
+        sparseCheckout: []
+  stages:
+    - stage:
+        name: Build
+        identifier: Build
+        description: ""
+        type: CI
+        spec:
+          cloneCodebase: true
+          caching:
+            enabled: true
+            override: false
+          buildIntelligence:
+            enabled: true
+          platform:
+            os: Linux
+            arch: Amd64
+          runtime:
+            type: Cloud
+            spec: {}
+          execution:
+            steps:
+              - step:
+                  type: Run
+                  name: Setup
+                  identifier: Setup
+                  spec:
+                    connectorRef: nidadockerhub
+                    image: maven:3.9-eclipse-temurin-17
+                    shell: Bash
+                    command: mvn clean
+              - step:
+                  type: Run
+                  name: Compile
+                  identifier: Compile
+                  spec:
+                    connectorRef: nidadockerhub
+                    image: maven:3.9-eclipse-temurin-17
+                    shell: Sh
+                    command: mvn compile
+              - step:
+                  type: Semgrep
+                  name: Static Code Analysis
+                  identifier: Static_Code_Analysis
+                  spec:
+                    mode: orchestration
+                    config: default
+                    target:
+                      type: repository
+                      detection: auto
+                    advanced:
+                      log:
+                        level: info
+              - step:
+                  type: RunTests
+                  name: Unit Testing
+                  identifier: Unit_Testing
+                  spec:
+                    connectorRef: nidadockerhub
+                    language: Java
+                    buildTool: Maven
+                    args: test
+                    runOnlySelectedTests: true
+                    reports:
+                      type: JUnit
+                      spec:
+                        paths:
+                          - target/surefire-reports/*.xml
+                    enableTestSplitting: false
+                    image: maven:3.9-eclipse-temurin-17
+              - parallel:
+                  - step:
+                      type: RunTests
+                      name: Tests Product
+                      identifier: test_product
+                      spec:
+                        connectorRef: nidadockerhub
+                        language: Java
+                        buildTool: Maven
+                        args: test -P product-tests -B
+                        runOnlySelectedTests: true
+                        reports:
+                          type: JUnit
+                          spec:
+                            paths:
+                              - target/surefire-reports/product/*.xml
+                        enableTestSplitting: false
+                        image: maven:3.9-eclipse-temurin-17
+                  - step:
+                      type: RunTests
+                      name: Tests Cart
+                      identifier: test_cart
+                      spec:
+                        connectorRef: nidadockerhub
+                        language: Java
+                        buildTool: Maven
+                        args: test -P cart-tests -B
+                        runOnlySelectedTests: true
+                        reports:
+                          type: JUnit
+                          spec:
+                            paths:
+                              - target/surefire-reports/cart/*.xml
+                        enableTestSplitting: false
+                        image: maven:3.9-eclipse-temurin-17
+                  - step:
+                      type: RunTests
+                      name: Tests Order
+                      identifier: test_order
+                      spec:
+                        connectorRef: nidadockerhub
+                        language: Java
+                        buildTool: Maven
+                        args: test -P order-tests -B
+                        runOnlySelectedTests: true
+                        reports:
+                          type: JUnit
+                          spec:
+                            paths:
+                              - target/surefire-reports/order/*.xml
+                        enableTestSplitting: false
+                        image: maven:3.9-eclipse-temurin-17
+                  - step:
+                      type: RunTests
+                      name: Tests User
+                      identifier: test_user
+                      spec:
+                        connectorRef: nidadockerhub
+                        language: Java
+                        buildTool: Maven
+                        args: test -P user-tests -B
+                        runOnlySelectedTests: true
+                        reports:
+                          type: JUnit
+                          spec:
+                            paths:
+                              - target/surefire-reports/user/*.xml
+                        enableTestSplitting: false
+                        image: maven:3.9-eclipse-temurin-17
+              - step:
+                  type: Run
+                  name: Code Coverage
+                  identifier: Code_Coverage
+                  spec:
+                    connectorRef: nidadockerhub
+                    image: maven:3.9-eclipse-temurin-17
+                    shell: Sh
+                    command: mvn jacoco:report
+              - step:
+                  type: Run
+                  name: Build
+                  identifier: Build
+                  spec:
+                    connectorRef: nidadockerhub
+                    image: maven:3.9-eclipse-temurin-17
+                    shell: Sh
+                    command: |-
+                      mvn package
+                      ls
+              - step:
+                  type: Run
+                  name: Deploy War Artifacts
+                  identifier: Deploy_War_Artifacts
+                  spec:
+                    connectorRef: nidadockerhub
+                    image: maven:3.9-eclipse-temurin-17
+                    shell: Sh
+                    command: |-
+                      cat << 'EOF' > settings.xml
+                      <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+                                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                                xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">
+                        <servers>
+                          <server>
+                            <id>maven-dev</id>
+                            <username>nida.ap@harness.io</username>
+                            <password><+secrets.getValue("ARMavenTokenValue")></password>
+                          </server>
+                        </servers>
+                      </settings>
+                      EOF
+                      mvn -s settings.xml deploy
