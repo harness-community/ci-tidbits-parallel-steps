@@ -140,5 +140,14 @@
     </profile>
 
   </profiles>
-
+<distributionManagement>
+    <snapshotRepository>
+      <id>maven-dev</id>
+      <url>https://pkg.harness.io/pkg/SAn9tg9eRrWyEJyLZ01ibw/ecommerce-demo-app/maven</url>
+    </snapshotRepository>
+    <repository>
+      <id>maven-dev</id>
+      <url>https://pkg.harness.io/pkg/SAn9tg9eRrWyEJyLZ01ibw/ecommerce-demo-app/maven</url>
+    </repository>
+  </distributionManagement>
 </project>
