@@ -89,10 +89,6 @@ Each profile passes its tag name to the Surefire `groups` property, so only the 
     <id>user-tests</id>
     <properties><test.groups>user</test.groups></properties>
   </profile>
-  <profile>
-    <id>integration-tests</id>
-    <properties><test.groups>integration</test.groups></properties>
-  </profile>
 </profiles>
 ```
 
@@ -173,22 +169,22 @@ reports:
       - "target/surefire-reports/product/*.xml"
 ```
 
-Repeat for each parallel step using its own subdirectory (`cart`, `order`, `user`, `integration`).
+Repeat for each parallel step using its own subdirectory (`cart`, `order`, `user`).
 
 ---
 
 ## Step 5 — Run your pipeline and compare
 
-1. **Trigger your pipeline.** Watch the execution graph — all five test steps start at the same time.
+1. **Trigger your pipeline.** Watch the execution graph — all four test steps start at the same time.
 
 2. **Check the execution view.** The parallel block shows each step running concurrently with its own log stream and status indicator.
 
 3. **Compare the timings.** The pipeline wall-clock time should be close to the slowest single group, not the sum of all groups.
 
 ```
-Sequential (before):   ~50s  (10s × 5 suites, one after another)
-Parallel  (after):     ~12s  (all 5 suites running at the same time)
-Time saved:            ~38s  (~75% faster)
+Sequential (before):   ~40s  (10s × 4 suites, one after another)
+Parallel  (after):     ~12s  (all 4 suites running at the same time)
+Time saved:            ~28s  (~70% faster)
 ```
 
 4. **Review test reports.** Each group's JUnit XML is collected separately and surfaced in the Harness test results tab.
@@ -305,16 +301,9 @@ The rule of thumb is simple: **if two steps don't need each other's output, they
 
 ---
 
-## What's next?
-
-- **Dynamic parallelism** — Use Harness matrix strategies to generate parallel steps from a list without repeating YAML blocks.
-- **Mix all three** — Combine test splitting, security scans, and workload splitting in a single `parallel:` block. Tests, SAST, and Docker builds all fire at once — the pipeline only moves forward when everything is green.
-
----
-
 ## Resources
 
-- [Harness Developer Hub — Parallel Steps](https://developer.harness.io/docs/continuous-integration/use-ci/optimize-and-more/parallelize-ci-pipelines/)
+- [Harness Developer Hub — Parallel Steps](https://developer.harness.io/docs/continuous-integration/use-ci/run-tests/speed-up-ci-test-pipelines-using-parallelism/)
 - [Run step reference](https://developer.harness.io/docs/continuous-integration/use-ci/run-step-settings/)
 - [Harness CI overview](https://developer.harness.io/docs/continuous-integration/)
 
@@ -357,27 +346,24 @@ ecommerce-app/
 │   │   ├── data.sql                     — Seed data (1 user, 12 products)
 │   │   └── application.properties      — H2 database and server config
 │   └── test/java/com/harness/ecommerce/
-│       ├── service/
-│       │   ├── ProductServiceTest.java      — @Tag("product")
-│       │   ├── CartServiceTest.java         — @Tag("cart")
-│       │   ├── OrderServiceTest.java        — @Tag("order")
-│       │   └── UserServiceTest.java         — @Tag("user")
-│       └── integration/
-│           └── CheckoutIntegrationTest.java — @Tag("integration")
-└── pom.xml                              — Maven build with 5 Surefire profiles
+│       └── service/
+│           ├── ProductServiceTest.java      — @Tag("product")
+│           ├── CartServiceTest.java         — @Tag("cart")
+│           ├── OrderServiceTest.java        — @Tag("order")
+│           └── UserServiceTest.java         — @Tag("user")
+└── pom.xml                              — Maven build with 4 Surefire profiles
 ```
 
 ---
 
-## Test Coverage (55 tests across 5 groups)
+## Test Coverage (47 tests across 4 groups)
 
-| Test Class                    | Tag           | Tests | What it covers                                     |
-| ----------------------------- | ------------- | ----- | -------------------------------------------------- |
-| `ProductServiceTest`          | `product`     | 16    | CRUD, search, stock updates, activate/deactivate   |
-| `CartServiceTest`             | `cart`        | 8     | Add/remove items, quantity updates, cart totals    |
-| `OrderServiceTest`            | `order`       | 13    | Checkout, status transitions, cancellation, totals |
-| `UserServiceTest`             | `user`        | 10    | Registration, lookup, update, deactivation         |
-| `CheckoutIntegrationTest`     | `integration` | 8     | End-to-end cart → order → stock deduction flow     |
+| Test Class                    | Tag       | Tests | What it covers                                     |
+| ----------------------------- | --------- | ----- | -------------------------------------------------- |
+| `ProductServiceTest`          | `product` | 16    | CRUD, search, stock updates, activate/deactivate   |
+| `CartServiceTest`             | `cart`    | 8     | Add/remove items, quantity updates, cart totals    |
+| `OrderServiceTest`            | `order`   | 13    | Checkout, status transitions, cancellation, totals |
+| `UserServiceTest`             | `user`    | 10    | Registration, lookup, update, deactivation         |
 
 ---
 
@@ -392,7 +378,6 @@ mvn test -P product-tests -B
 mvn test -P cart-tests -B
 mvn test -P order-tests -B
 mvn test -P user-tests -B
-mvn test -P integration-tests -B
 ```
 
 ---
@@ -415,7 +400,7 @@ Open `http://localhost:8080`. No npm, no Node.js, no separate terminal — the p
    - `<YOUR_ORG_ID>` — your Harness org identifier
    - `<YOUR_DOCKER_CONNECTOR>` — a Docker Hub or registry connector
    - `<YOUR_GIT_CONNECTOR>` — a GitHub/GitLab connector pointing at this repo
-3. Trigger the pipeline — the Compile step runs first, then all 5 test suites fire simultaneously
+3. Trigger the pipeline — the Compile step runs first, then all 4 test suites fire simultaneously
 4. Watch the execution graph to see all parallel steps running at the same time
 5. Compare the wall-clock time against running `mvn test` sequentially to see the savings
 
@@ -423,9 +408,9 @@ Open `http://localhost:8080`. No npm, no Node.js, no separate terminal — the p
 
 | Run mode             | Execution time | Notes                                 |
 | -------------------- | -------------- | ------------------------------------- |
-| Sequential           | ~50s           | Each suite waits for the previous     |
-| Parallel (5 steps)   | ~12s           | All suites run simultaneously         |
-| Time saved           | ~38s (~75%)    | Limited by the slowest single suite   |
+| Sequential           | ~40s           | Each suite waits for the previous     |
+| Parallel (4 steps)   | ~12s           | All suites run simultaneously         |
+| Time saved           | ~28s (~70%)    | Limited by the slowest single suite   |
 
 ---
 
