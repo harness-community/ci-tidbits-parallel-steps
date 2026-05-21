@@ -19,10 +19,11 @@ pipeline:
         spec:
           cloneCodebase: true
           caching:
-            enabled: true
+            enabled: false
             override: false
+            paths: []
           buildIntelligence:
-            enabled: true
+            enabled: false
           platform:
             os: Linux
             arch: Amd64
@@ -33,19 +34,10 @@ pipeline:
             steps:
               - step:
                   type: Run
-                  name: Setup
-                  identifier: Setup
-                  spec:
-                    connectorRef: nidadockerhub
-                    image: maven:3.9-eclipse-temurin-17
-                    shell: Bash
-                    command: mvn clean
-              - step:
-                  type: Run
                   name: Compile
                   identifier: Compile
                   spec:
-                    connectorRef: nidadockerhub
+                    connectorRef: account.harnessImage
                     image: maven:3.9-eclipse-temurin-17
                     shell: Sh
                     command: mvn compile
@@ -67,7 +59,7 @@ pipeline:
                   name: Unit Testing
                   identifier: Unit_Testing
                   spec:
-                    connectorRef: nidadockerhub
+                    connectorRef: account.harnessImage
                     language: Java
                     buildTool: Maven
                     args: test
@@ -85,7 +77,7 @@ pipeline:
                       name: Tests Product
                       identifier: test_product
                       spec:
-                        connectorRef: nidadockerhub
+                        connectorRef: account.harnessImage
                         language: Java
                         buildTool: Maven
                         args: test -P product-tests -B
@@ -102,7 +94,7 @@ pipeline:
                       name: Tests Cart
                       identifier: test_cart
                       spec:
-                        connectorRef: nidadockerhub
+                        connectorRef: account.harnessImage
                         language: Java
                         buildTool: Maven
                         args: test -P cart-tests -B
@@ -119,7 +111,7 @@ pipeline:
                       name: Tests Order
                       identifier: test_order
                       spec:
-                        connectorRef: nidadockerhub
+                        connectorRef: account.harnessImage
                         language: Java
                         buildTool: Maven
                         args: test -P order-tests -B
@@ -136,7 +128,7 @@ pipeline:
                       name: Tests User
                       identifier: test_user
                       spec:
-                        connectorRef: nidadockerhub
+                        connectorRef: account.harnessImage
                         language: Java
                         buildTool: Maven
                         args: test -P user-tests -B
@@ -150,19 +142,10 @@ pipeline:
                         image: maven:3.9-eclipse-temurin-17
               - step:
                   type: Run
-                  name: Code Coverage
-                  identifier: Code_Coverage
-                  spec:
-                    connectorRef: nidadockerhub
-                    image: maven:3.9-eclipse-temurin-17
-                    shell: Sh
-                    command: mvn jacoco:report
-              - step:
-                  type: Run
                   name: Build
                   identifier: Build
                   spec:
-                    connectorRef: nidadockerhub
+                    connectorRef: account.harnessImage
                     image: maven:3.9-eclipse-temurin-17
                     shell: Sh
                     command: |-
@@ -173,7 +156,7 @@ pipeline:
                   name: Deploy War Artifacts
                   identifier: Deploy_War_Artifacts
                   spec:
-                    connectorRef: nidadockerhub
+                    connectorRef: account.harnessImage
                     image: maven:3.9-eclipse-temurin-17
                     shell: Sh
                     command: |-
