@@ -1,0 +1,166 @@
+pipeline:
+  name: Ecommerce App - Parallel Test Pipeline
+  identifier: ecommerce_parallel_tests
+  description: >
+    Demonstrates Harness Parallel Steps by running 5 independent test suites
+    (product, cart, order, user, integration) simultaneously.
+    Each step targets a JUnit 5 @Tag group via Maven profiles.
+  projectIdentifier: <YOUR_PROJECT_ID>
+  orgIdentifier: <YOUR_ORG_ID>
+  tags:
+    demo: parallel-steps
+    app: ecommerce
+
+  stages:
+    - stage:
+        name: Build
+        identifier: build_stage
+        type: CI
+        spec:
+          cloneCodebase: true
+          infrastructure:
+            type: KubernetesDirect
+            spec:
+              connectorRef: <YOUR_K8S_CONNECTOR>
+              namespace: harness-builds
+
+          execution:
+            steps:
+
+              # ── Compile ────────────────────────────────────────────────────
+              - step:
+                  name: Compile
+                  identifier: compile
+                  type: Run
+                  spec:
+                    connectorRef: <YOUR_DOCKER_CONNECTOR>
+                    image: maven:3.9-eclipse-temurin-17
+                    command: mvn compile -B -q
+                    envVariables:
+                      MAVEN_OPTS: "-Xmx512m"
+
+              # ── Parallel Test Suites ───────────────────────────────────────
+              # All 5 suites run simultaneously after compile.
+              # Without parallel steps this would run sequentially (~5× slower).
+              - parallel:
+                  - step:
+                      name: "Tests: Product"
+                      identifier: test_product
+                      type: Run
+                      spec:
+                        connectorRef: <YOUR_DOCKER_CONNECTOR>
+                        image: maven:3.9-eclipse-temurin-17
+                        command: |
+                          echo "▶ Running Product test suite..."
+                          mvn test -P product-tests -B \
+                            -Dsurefire.reportsDirectory=target/surefire-reports/product
+                          echo "✅ Product tests complete"
+                        envVariables:
+                          MAVEN_OPTS: "-Xmx512m"
+                        reports:
+                          type: JUnit
+                          spec:
+                            paths:
+                              - "target/surefire-reports/product/*.xml"
+
+                  - step:
+                      name: "Tests: Cart"
+                      identifier: test_cart
+                      type: Run
+                      spec:
+                        connectorRef: <YOUR_DOCKER_CONNECTOR>
+                        image: maven:3.9-eclipse-temurin-17
+                        command: |
+                          echo "▶ Running Cart test suite..."
+                          mvn test -P cart-tests -B \
+                            -Dsurefire.reportsDirectory=target/surefire-reports/cart
+                          echo "✅ Cart tests complete"
+                        envVariables:
+                          MAVEN_OPTS: "-Xmx512m"
+                        reports:
+                          type: JUnit
+                          spec:
+                            paths:
+                              - "target/surefire-reports/cart/*.xml"
+
+                  - step:
+                      name: "Tests: Order"
+                      identifier: test_order
+                      type: Run
+                      spec:
+                        connectorRef: <YOUR_DOCKER_CONNECTOR>
+                        image: maven:3.9-eclipse-temurin-17
+                        command: |
+                          echo "▶ Running Order test suite..."
+                          mvn test -P order-tests -B \
+                            -Dsurefire.reportsDirectory=target/surefire-reports/order
+                          echo "✅ Order tests complete"
+                        envVariables:
+                          MAVEN_OPTS: "-Xmx512m"
+                        reports:
+                          type: JUnit
+                          spec:
+                            paths:
+                              - "target/surefire-reports/order/*.xml"
+
+                  - step:
+                      name: "Tests: User"
+                      identifier: test_user
+                      type: Run
+                      spec:
+                        connectorRef: <YOUR_DOCKER_CONNECTOR>
+                        image: maven:3.9-eclipse-temurin-17
+                        command: |
+                          echo "▶ Running User test suite..."
+                          mvn test -P user-tests -B \
+                            -Dsurefire.reportsDirectory=target/surefire-reports/user
+                          echo "✅ User tests complete"
+                        envVariables:
+                          MAVEN_OPTS: "-Xmx512m"
+                        reports:
+                          type: JUnit
+                          spec:
+                            paths:
+                              - "target/surefire-reports/user/*.xml"
+
+                  - step:
+                      name: "Tests: Integration"
+                      identifier: test_integration
+                      type: Run
+                      spec:
+                        connectorRef: <YOUR_DOCKER_CONNECTOR>
+                        image: maven:3.9-eclipse-temurin-17
+                        command: |
+                          echo "▶ Running Integration test suite..."
+                          mvn test -P integration-tests -B \
+                            -Dsurefire.reportsDirectory=target/surefire-reports/integration
+                          echo "✅ Integration tests complete"
+                        envVariables:
+                          MAVEN_OPTS: "-Xmx512m"
+                        reports:
+                          type: JUnit
+                          spec:
+                            paths:
+                              - "target/surefire-reports/integration/*.xml"
+
+              # ── Package (runs after all parallel tests pass) ───────────────
+              - step:
+                  name: Package
+                  identifier: package
+                  type: Run
+                  spec:
+                    connectorRef: <YOUR_DOCKER_CONNECTOR>
+                    image: maven:3.9-eclipse-temurin-17
+                    command: mvn package -DskipTests -B -q
+                    envVariables:
+                      MAVEN_OPTS: "-Xmx512m"
+
+  properties:
+    ci:
+      codebase:
+        connectorRef: <YOUR_GIT_CONNECTOR>
+        repoName: ci-tidbits-parallel-steps
+        build:
+          type: branch
+          spec:
+            branch: main
