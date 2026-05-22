@@ -1,5 +1,0 @@
-target/
-*.class
-*.log
-.env
-frontend/node_modules/
