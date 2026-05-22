@@ -55,91 +55,76 @@ pipeline:
                       log:
                         level: info
               - step:
-                  type: RunTests
+                  type: Run
                   name: Unit Testing
                   identifier: Unit_Testing
                   spec:
                     connectorRef: account.harnessImage
-                    language: Java
-                    buildTool: Maven
-                    args: test
-                    runOnlySelectedTests: true
+                    image: maven:3.9-eclipse-temurin-17
+                    shell: Sh
+                    command: mvn test
                     reports:
                       type: JUnit
                       spec:
                         paths:
                           - target/surefire-reports/*.xml
-                    enableTestSplitting: false
-                    image: maven:3.9-eclipse-temurin-17
               - parallel:
                   - step:
-                      type: RunTests
+                      type: Run
                       name: Tests Product
                       identifier: test_product
                       spec:
                         connectorRef: account.harnessImage
-                        language: Java
-                        buildTool: Maven
-                        args: test -P product-tests -B
-                        runOnlySelectedTests: true
+                        image: maven:3.9-eclipse-temurin-17
+                        shell: Sh
+                        command: mvn test -P product-tests -B
                         reports:
                           type: JUnit
                           spec:
                             paths:
                               - target/surefire-reports/product/*.xml
-                        enableTestSplitting: false
-                        image: maven:3.9-eclipse-temurin-17
                   - step:
-                      type: RunTests
+                      type: Run
                       name: Tests Cart
                       identifier: test_cart
                       spec:
                         connectorRef: account.harnessImage
-                        language: Java
-                        buildTool: Maven
-                        args: test -P cart-tests -B
-                        runOnlySelectedTests: true
+                        image: maven:3.9-eclipse-temurin-17
+                        shell: Sh
+                        command: mvn test -P cart-tests -B
                         reports:
                           type: JUnit
                           spec:
                             paths:
                               - target/surefire-reports/cart/*.xml
-                        enableTestSplitting: false
-                        image: maven:3.9-eclipse-temurin-17
                   - step:
-                      type: RunTests
+                      type: Run
                       name: Tests Order
                       identifier: test_order
                       spec:
                         connectorRef: account.harnessImage
-                        language: Java
-                        buildTool: Maven
-                        args: test -P order-tests -B
-                        runOnlySelectedTests: true
+                        image: maven:3.9-eclipse-temurin-17
+                        shell: Sh
+                        command: mvn test -P order-tests -B
                         reports:
                           type: JUnit
                           spec:
                             paths:
                               - target/surefire-reports/order/*.xml
-                        enableTestSplitting: false
-                        image: maven:3.9-eclipse-temurin-17
                   - step:
-                      type: RunTests
+                      type: Run
                       name: Tests User
                       identifier: test_user
                       spec:
                         connectorRef: account.harnessImage
-                        language: Java
-                        buildTool: Maven
-                        args: test -P user-tests -B
-                        runOnlySelectedTests: true
+                        image: maven:3.9-eclipse-temurin-17
+                        shell: Sh
+                        command: mvn test -P user-tests -B
                         reports:
                           type: JUnit
                           spec:
                             paths:
                               - target/surefire-reports/user/*.xml
-                        enableTestSplitting: false
-                        image: maven:3.9-eclipse-temurin-17
               - step:
                   type: Run
                   name: Build
@@ -148,9 +133,7 @@ pipeline:
                     connectorRef: account.harnessImage
                     image: maven:3.9-eclipse-temurin-17
                     shell: Sh
-                    command: |-
-                      mvn package
-                      ls
+                    command: mvn package
               - step:
                   type: Run
                   name: Deploy War Artifacts
