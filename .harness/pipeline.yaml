@@ -1,8 +1,8 @@
 pipeline:
   name: ci-tidbits-parallel-steps
   identifier: citidbitsparallelsteps
-  projectIdentifier: nidapractice
-  orgIdentifier: Harness_Training
+  projectIdentifier: <+project.identifier>
+  orgIdentifier: <+org.identifier>
   tags: {}
   properties:
     ci:
@@ -37,7 +37,7 @@ pipeline:
                   name: Compile
                   identifier: Compile
                   spec:
-                    connectorRef: account.harnessImage
+                    connectorRef: <YOUR_DOCKER_CONNECTOR>
                     image: maven:3.9-eclipse-temurin-17
                     shell: Sh
                     command: mvn compile
@@ -59,7 +59,7 @@ pipeline:
                   name: Unit Testing
                   identifier: Unit_Testing
                   spec:
-                    connectorRef: account.harnessImage
+                    connectorRef: <YOUR_DOCKER_CONNECTOR>
                     image: maven:3.9-eclipse-temurin-17
                     shell: Sh
                     command: mvn test
@@ -74,7 +74,7 @@ pipeline:
                       name: Tests Product
                       identifier: test_product
                       spec:
-                        connectorRef: account.harnessImage
+                        connectorRef: <YOUR_DOCKER_CONNECTOR>
                         image: maven:3.9-eclipse-temurin-17
                         shell: Sh
                         command: mvn test -P product-tests -B
@@ -88,7 +88,7 @@ pipeline:
                       name: Tests Cart
                       identifier: test_cart
                       spec:
-                        connectorRef: account.harnessImage
+                        connectorRef: <YOUR_DOCKER_CONNECTOR>
                         image: maven:3.9-eclipse-temurin-17
                         shell: Sh
                         command: mvn test -P cart-tests -B
@@ -102,7 +102,7 @@ pipeline:
                       name: Tests Order
                       identifier: test_order
                       spec:
-                        connectorRef: account.harnessImage
+                        connectorRef: <YOUR_DOCKER_CONNECTOR>
                         image: maven:3.9-eclipse-temurin-17
                         shell: Sh
                         command: mvn test -P order-tests -B
@@ -116,7 +116,7 @@ pipeline:
                       name: Tests User
                       identifier: test_user
                       spec:
-                        connectorRef: account.harnessImage
+                        connectorRef: <YOUR_DOCKER_CONNECTOR>
                         image: maven:3.9-eclipse-temurin-17
                         shell: Sh
                         command: mvn test -P user-tests -B
@@ -130,16 +130,16 @@ pipeline:
                   name: Build
                   identifier: Build
                   spec:
-                    connectorRef: account.harnessImage
+                    connectorRef: <YOUR_DOCKER_CONNECTOR>
                     image: maven:3.9-eclipse-temurin-17
                     shell: Sh
-                    command: mvn package
+                    command: mvn package -DskipTests -B
               - step:
                   type: Run
                   name: Deploy War Artifacts
                   identifier: Deploy_War_Artifacts
                   spec:
-                    connectorRef: account.harnessImage
+                    connectorRef: <YOUR_DOCKER_CONNECTOR>
                     image: maven:3.9-eclipse-temurin-17
                     shell: Sh
                     command: |-
@@ -150,10 +150,10 @@ pipeline:
                         <servers>
                           <server>
                             <id>maven-dev</id>
-                            <username>nida.ap@harness.io</username>
-                            <password><+secrets.getValue("ARMavenTokenValue")></password>
+                            <username><YOUR_USER_NAME></username>
+                            <password><+secrets.getValue(<YOUR_REGISTRY_SECRET>)></password>
                           </server>
                         </servers>
                       </settings>
                       EOF
-                      mvn -s settings.xml deploy
+                      mvn -s settings.xml deploy -DskipTests -B
