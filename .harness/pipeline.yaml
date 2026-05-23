@@ -1,0 +1,132 @@
+pipeline:
+  name: CI Tidbits ParallelSteps
+  identifier: ci_tidbits_parallelsteps
+  projectIdentifier: nidapractice
+  orgIdentifier: Harness_Training
+  tags: {}
+  properties:
+    ci:
+      codebase:
+        connectorRef: <YOUR_GITHUB_CONNECTOR>
+        repoName: ci-tidbits-parallel-steps
+        build: <+input>
+        sparseCheckout: []
+  stages:
+    - stage:
+        name: Build
+        identifier: Build
+        description: ""
+        type: CI
+        spec:
+          cloneCodebase: true
+          caching:
+            enabled: false
+            override: false
+            paths: []
+          buildIntelligence:
+            enabled: false
+          platform:
+            os: Linux
+            arch: Amd64
+          runtime:
+            type: Cloud
+            spec: {}
+          execution:
+            steps:
+              - step:
+                  type: Run
+                  name: Compile
+                  identifier: Compile
+                  spec:
+                    connectorRef: <YOUR_DOCKER_CONNECTOR>
+                    image: maven:3.9-eclipse-temurin-17
+                    shell: Sh
+                    command: mvn compile
+              - step:
+                  type: Semgrep
+                  name: Static Code Analysis
+                  identifier: Static_Code_Analysis
+                  spec:
+                    mode: orchestration
+                    config: default
+                    target:
+                      type: repository
+                      detection: auto
+                    advanced:
+                      log:
+                        level: info
+              
+              - step:
+                  type: Run
+                  name: Tests Product
+                  identifier: test_product
+                  spec:
+                    connectorRef: <YOUR_DOCKER_CONNECTOR>
+                    image: maven:3.9-eclipse-temurin-17
+                    shell: Sh
+                    command: mvn test -P product-tests -B
+                    reports:
+                      type: JUnit
+                      spec:
+                        paths:
+                          - target/surefire-reports/*.xml
+              - step:
+                  type: Run
+                  name: Tests Cart
+                  identifier: test_cart
+                  spec:
+                    connectorRef: <YOUR_DOCKER_CONNECTOR>
+                    image: maven:3.9-eclipse-temurin-17
+                    shell: Sh
+                    command: mvn test -P cart-tests -B
+                    reports:
+                      type: JUnit
+                      spec:
+                        paths:
+                          - target/surefire-reports/*.xml
+              - step:
+                  type: Run
+                  name: Tests Order
+                  identifier: test_order
+                  spec:
+                    connectorRef: <YOUR_DOCKER_CONNECTOR>
+                    image: maven:3.9-eclipse-temurin-17
+                    shell: Sh
+                    command: mvn test -P order-tests -B
+                    reports:
+                      type: JUnit
+                      spec:
+                        paths:
+                          - target/surefire-reports/*.xml
+              - step:
+                  type: Run
+                  name: Tests User
+                  identifier: test_user
+                  spec:
+                    connectorRef: <YOUR_DOCKER_CONNECTOR>
+                    image: maven:3.9-eclipse-temurin-17
+                    shell: Sh
+                    command: mvn test -P user-tests -B
+                    reports:
+                      type: JUnit
+                      spec:
+                        paths:
+                          - target/surefire-reports/*.xml
+              - step:
+                  type: Run
+                  name: Build
+                  identifier: Build
+                  spec:
+                    connectorRef: <YOUR_DOCKER_CONNECTOR>
+                    image: maven:3.9-eclipse-temurin-17
+                    shell: Sh
+                    command: mvn package -DskipTests -B
+              - step:
+                  type: Run
+                  name: Deploy War Artifacts
+                  identifier: Deploy_War_Artifacts
+                  spec:
+                    connectorRef: <YOUR_DOCKER_CONNECTOR>
+                    image: maven:3.9-eclipse-temurin-17
+                    shell: Sh
+                    command: echo "Deploy command execution"
